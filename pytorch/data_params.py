@@ -3,6 +3,7 @@ from extractSDAE import extractSDAE
 from extractconvSDAE import extractconvSDAE
 from SDAE import SDAE
 from convSDAE import convSDAE
+from convSDAE import conv1dSDAE
 
 easy = edict()
 easy.name = 'easy'
@@ -94,6 +95,10 @@ def convsdae_yale(dropout=0.2, slope=0.0):
                     dropout=dropout, slope=slope)
 
 
+def conv1dsdae_icentia11k(dropout=0.2, slope=0.0, dim=10):
+    return conv1dSDAE(dim=[1, 50, 50, 50, dim], output_padding=[1, 1, 1], numpen=4, dropout=dropout, slope=slope)
+
+
 def load_predefined_net(args, params):
     if args.db == 'mnist':
         net = sdae_mnist(dropout=params['dropout'], slope=params['reluslope'], dim=args.dim)
@@ -115,6 +120,8 @@ def load_predefined_net(args, params):
         net = convsdae_yale(dropout=params['dropout'], slope=params['reluslope'])
     elif args.db == 'easy':
         net = sdae_easy(dropout=params['dropout'], slope=params['reluslope'], dim=args.dim)
+    elif args.db == '1dconv':
+        net = conv1dsdae_icentia11k(dropout=0.2, slope=0.0, dim=10)
     else:
         raise ValueError("Unexpected database %s" % args.db)
 
