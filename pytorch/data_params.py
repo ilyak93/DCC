@@ -1,9 +1,11 @@
 from easydict import EasyDict as edict
 from extractSDAE import extractSDAE
 from extractconvSDAE import extractconvSDAE
+from extractconvSDAE import extractconv1dSDAE
 from SDAE import SDAE
 from convSDAE import convSDAE
 from convSDAE import conv1dSDAE
+
 
 easy = edict()
 easy.name = 'easy'
@@ -51,6 +53,9 @@ def extract_sdae_yale(slope=0.0, dim=10):
 
 def extract_sdae_easy(slope=0.0, dim=1):
     return extractSDAE(dim=easy.dim + [dim], slope=slope)
+
+def extract_conv1dsdae_icentia(slope=0.0, dim=10):
+    return extractconv1dSDAE(dim=[1, 50, 50, 50, dim], output_padding=[1, 1, 1], numpen=4, slope=slope)
 
 
 def sdae_mnist(dropout=0.2, slope=0.0, dim=10):
@@ -151,6 +156,8 @@ def load_predefined_extract_net(args):
         net = extract_convsdae_yale(slope=reluslope)
     elif args.db == easy.name:
         net = extract_sdae_easy(slope=reluslope, dim=args.dim)
+    elif args.db == '1dconv':
+        net = extract_conv1dsdae_icentia(slope=reluslope, dim=10)
     else:
         raise ValueError("Unexpected database %s" % args.db)
 
