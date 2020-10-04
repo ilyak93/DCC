@@ -196,15 +196,15 @@ def test(testloader, net, index, epoch, use_cuda, logger):
     losses = AverageMeter()
 
     net.eval()
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            if use_cuda:
+                inputs = inputs.cuda()
+            inputs_Var = Variable(inputs)
+            outputs = net(inputs_Var, index)
 
-    for batch_idx, (inputs, targets) in enumerate(testloader):
-        if use_cuda:
-            inputs = inputs.cuda()
-        inputs_Var = Variable(inputs, volatile=True)
-        outputs = net(inputs_Var, index)
-
-        # measure accuracy and record loss
-        losses.update(outputs.item(), inputs.size(0))
+            # measure accuracy and record loss
+            losses.update(outputs.item(), inputs.size(0))
 
     # log to TensorBoard
     if logger:

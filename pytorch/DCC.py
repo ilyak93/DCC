@@ -278,15 +278,16 @@ def test(testloader, net, criterion, epoch, use_cuda, _delta, pairs, numeval, fl
     original = []
     features = []
     labels = []
-
-    for batch_idx, (inputs, targets) in enumerate(testloader):
-        if use_cuda:
-            inputs = inputs.cuda()
-        inputs_Var = Variable(inputs, volatile=True)
-        enc, dec = net(inputs_Var)
-        features += list(enc.data.cpu().numpy())
-        labels += list(targets)
-        original += list(inputs.cpu().numpy())
+    
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            if use_cuda:
+                inputs = inputs.cuda()
+            inputs_Var = Variable(inputs)
+            enc, dec = net(inputs_Var)
+            features += list(enc.data.cpu().numpy())
+            labels += list(targets)
+            original += list(inputs.cpu().numpy())
 
     original, features, labels = np.asarray(original).astype(np.float32), np.asarray(features).astype(np.float32), \
                                   np.asarray(labels)
