@@ -95,9 +95,9 @@ def kNN(X, k, measure='euclidean'):
     parallelized_metrics = list(distance_metrics().keys())
         
     if (measure in parallelized_metrics):
-        w = pairwise_distances(X=X[start:end], Y=X, metric=measure, n_jobs=-1)
+        w = pairwise_distances(X=X, Y=X, metric=measure, n_jobs=-1)
     else:
-        w = distance.cdist(X[start:end], X, measure)
+        w = distance.cdist(X, X, measure)
             
     y = np.argsort(w, axis=1)
 
