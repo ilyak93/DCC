@@ -184,6 +184,35 @@ def train(trainloader, net, index, optimizer, epoch, use_cuda, logger):
         losses.update(outputs.item(), inputs.size(0))
 
         outputs.backward()
+        
+        '''
+        # gradient clipping for mlp arch
+        ch = net.named_parameters()
+            for c in ch:
+                if 'enc' in c[0]:
+                    k = c[1]
+                    torch.nn.utils.clip_grad_norm_(c[1], c[1].mean(dtype=float))
+                d1 = c[1].view(-1)
+                if torch.isnan(d1).any():
+                    print('heree')
+                    exit(0)
+            del (ch)
+        '''
+        '''
+        # gradient clipping for convolutional arch
+            ch = net.named_parameters()
+            for c in ch:
+                #if ('enc' in c[0] and 'benc' not in c[0]) or ('dec' in c[0] and 'bdec' not in c[0]):
+                    #print(c[0])
+                    #print(c[1])
+                    #torch.nn.utils.clip_grad_norm_(c[1], c[1].mean(dtype=float))
+                d1 = c[1].view(-1)
+                if torch.isnan(d1).any():
+                    print('heree')
+                    exit(0)
+            del (ch)
+        '''
+        
         optimizer.step()
 
     # log to TensorBoard
