@@ -1,11 +1,8 @@
 from easydict import EasyDict as edict
 from extractSDAE import extractSDAE
-from extractconvSDAE import extractconvSDAE
-from extractconvSDAE import extractconv1dSDAE
+from extractconvSDAE import extractconvSDAE, extractconv1SDAE
 from SDAE import SDAE
-from convSDAE import convSDAE
-from convSDAE import conv1dSDAE
-
+from convSDAE import convSDAE, conv1SDAE
 
 easy = edict()
 easy.name = 'easy'
@@ -54,8 +51,12 @@ def extract_sdae_yale(slope=0.0, dim=10):
 def extract_sdae_easy(slope=0.0, dim=1):
     return extractSDAE(dim=easy.dim + [dim], slope=slope)
 
-def extract_conv1dsdae_icentia(slope=0.0, dim=10):
-    return extractconv1dSDAE(dim=[1, 50, 50, 50, dim], output_padding=[1, 1, 1], numpen=4, slope=slope)
+def extract_sdae_icentia(slope=0.0, dim=10):
+    return extractSDAE(dim=[2049, 500, 500, 2000, dim], slope=slope)
+
+def extract_conv1sdae_icentia(slope=0.0, dim=10):
+    return extractconv1SDAE(dim=[1, 50, 50, 50, dim], output_padding=[1, 1, 1], numpen=256, slope=slope)
+
 
 
 def sdae_mnist(dropout=0.2, slope=0.0, dim=10):
@@ -99,9 +100,12 @@ def convsdae_yale(dropout=0.2, slope=0.0):
     return convSDAE(dim=[1, 50, 50, 50, 50, 50, 10], output_padding=[(0, 0), (1, 1), (1, 1), (0, 1), (0, 1)], numpen=6,
                     dropout=dropout, slope=slope)
 
+def convsdae_icentia(dropout=0.2, slope=0.0, dim=10):
+    return SDAE(dim=[2049, 500, 500, 2000, dim], dropout=dropout, slope=slope)
 
-def conv1dsdae_icentia11k(dropout=0.2, slope=0.0, dim=10):
-    return conv1dSDAE(dim=[1, 50, 50, 50, dim], output_padding=[1, 1, 1], numpen=4, dropout=dropout, slope=slope)
+def conv1sdae_icentia(dropout=0.2, slope=0.0, dim=10):
+    return conv1SDAE(dim=[1, 50, 50, 50, dim], output_padding=[1, 1, 1], numpen=256, dropout=dropout, slope=slope)
+
 
 
 def load_predefined_net(args, params):
@@ -123,10 +127,10 @@ def load_predefined_net(args, params):
         net = convsdae_ytf(dropout=params['dropout'], slope=params['reluslope'])
     elif args.db == 'cyale':
         net = convsdae_yale(dropout=params['dropout'], slope=params['reluslope'])
-    elif args.db == 'easy':
-        net = sdae_easy(dropout=params['dropout'], slope=params['reluslope'], dim=args.dim)
-    elif args.db == '1dconv':
-        net = conv1dsdae_icentia11k(dropout=0.2, slope=0.0, dim=10)
+    elif args.db == 'normal':
+        net = convsdae_icentia(dropout=0.2, slope=0.0, dim=10)
+    elif args.db == 'conv1d':
+        net = conv1sdae_icentia(dropout=0.2, slope=0.0, dim=10)
     else:
         raise ValueError("Unexpected database %s" % args.db)
 
@@ -154,10 +158,10 @@ def load_predefined_extract_net(args):
         net = extract_convsdae_ytf(slope=reluslope)
     elif args.db == 'cyale':
         net = extract_convsdae_yale(slope=reluslope)
-    elif args.db == easy.name:
-        net = extract_sdae_easy(slope=reluslope, dim=args.dim)
-    elif args.db == '1dconv':
-        net = extract_conv1dsdae_icentia(slope=reluslope, dim=10)
+    elif args.db == 'normal':
+        net = extract_sdae_icentia(slope=reluslope, dim=10)
+    elif args.db == 'conv1d':
+        net = extract_conv1sdae_icentia(slope=reluslope, dim=10)
     else:
         raise ValueError("Unexpected database %s" % args.db)
 

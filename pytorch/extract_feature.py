@@ -99,7 +99,7 @@ def extract(dataloader, net, use_cuda):
         for batch_idx, (inputs, targets) in enumerate(dataloader):
             if use_cuda:
                 inputs = inputs.cuda()
-            inputs_Var = Variable(inputs, volatile=True)
+            inputs_Var = Variable(inputs)
             enc, dec = net(inputs_Var)
             features += list(enc.data.cpu().numpy())
             labels += list(targets)

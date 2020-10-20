@@ -13,7 +13,7 @@ class extractconvSDAE(nn.Module):
         self.benc, self.bdec = [], []
         for i in range(self.nlayers):
             if i == self.nlayers - 1:
-                self.enc.append(nn.Linear(dim[i]*numpen*numpen, dim[i+1]))
+                self.enc.append(nn.Linear(dim[i]*numpen, dim[i+1]))
                 self.benc.append(nn.BatchNorm2d(dim[i + 1]))
                 self.dec.append(nn.ConvTranspose2d(dim[i + 1], dim[i], kernel_size=numpen, stride=1))
                 self.bdec.append(nn.BatchNorm2d(dim[i]))
@@ -62,17 +62,18 @@ class extractconvSDAE(nn.Module):
         out = encoded
         for i, (decoder,bdecoder) in reversed(list(enumerate(zip(self.dec,self.bdec)))):
             if i == self.nlayers-1:
-                out = out.view(out.size(0), -1, 1, 1)
+                out = out.view(out.size(0), -1, 1)
             out = decoder(out)
             if i:
                 out = bdecoder(out)
                 out = F.leaky_relu(out, negative_slope=self.reluslope)
+                out = out.view(x.shape)
         return encoded, out
 
 
-class extractconv1dSDAE(nn.Module):
+class extractconv1SDAE(nn.Module):
     def __init__(self, dim, output_padding, numpen, slope=0.0):
-        super(extractconv1dSDAE, self).__init__()
+        super(extractconv1SDAE, self).__init__()
         self.in_dim = dim[0]
         self.nlayers = len(dim)-1
         self.reluslope = slope
@@ -81,7 +82,7 @@ class extractconv1dSDAE(nn.Module):
         self.benc, self.bdec = [], []
         for i in range(self.nlayers):
             if i == self.nlayers - 1:
-                self.enc.append(nn.Linear(dim[i]*numpen*numpen, dim[i+1]))
+                self.enc.append(nn.Linear(dim[i]*numpen, dim[i+1]))
                 self.benc.append(nn.BatchNorm1d(dim[i + 1]))
                 self.dec.append(nn.ConvTranspose1d(dim[i + 1], dim[i], kernel_size=numpen, stride=1))
                 self.bdec.append(nn.BatchNorm1d(dim[i]))
@@ -119,7 +120,10 @@ class extractconv1dSDAE(nn.Module):
                     init.constant(m.bias, 0)
 
     def forward(self,x):
+        inp_shape = x.shape
         encoded = x
+        if len(encoded.shape) != 3:
+            encoded = encoded.view(encoded.shape[0], 1, encoded.shape[1])
         for i, (encoder,bencoder) in enumerate(zip(self.enc,self.benc)):
             if i == self.nlayers-1:
                 encoded = encoded.view(encoded.size(0), -1)
@@ -130,10 +134,11 @@ class extractconv1dSDAE(nn.Module):
         out = encoded
         for i, (decoder,bdecoder) in reversed(list(enumerate(zip(self.dec,self.bdec)))):
             if i == self.nlayers-1:
-                out = out.view(out.size(0), -1, 1, 1)
+                out = out.view(out.size(0), -1, 1)
             out = decoder(out)
             if i:
                 out = bdecoder(out)
                 out = F.leaky_relu(out, negative_slope=self.reluslope)
+        out = out.view(inp_shape)
         return encoded, out
 

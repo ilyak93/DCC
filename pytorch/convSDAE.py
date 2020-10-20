@@ -98,31 +98,31 @@ class convSDAE(nn.Module):
         return out
 
 
-class conv1dSDAE(nn.Module):
+class conv1SDAE(nn.Module):
     def __init__(self, dim, output_padding, numpen, dropout=0.2, slope=0.0):
-        super(conv1dSDAE, self).__init__()
+        super(conv1SDAE, self).__init__()
         self.in_dim = dim[0]
-        self.nlayers = len(dim) - 1
+        self.nlayers = len(dim)-1
         self.reluslope = slope
         self.numpen = numpen
         self.enc, self.dec = [], []
         self.benc, self.bdec = [], []
         for i in range(self.nlayers):
             if i == self.nlayers - 1:
-                self.enc.append(nn.Linear(dim[i] * numpen * numpen, dim[i + 1]))
+                self.enc.append(nn.Linear(dim[i]*numpen, dim[i+1]))
                 self.benc.append(nn.BatchNorm1d(dim[i + 1]))
                 self.dec.append(nn.ConvTranspose1d(dim[i + 1], dim[i], kernel_size=numpen, stride=1))
                 self.bdec.append(nn.BatchNorm1d(dim[i]))
             elif i == 0:
                 self.enc.append(nn.Conv1d(dim[i], dim[i + 1], kernel_size=4, stride=2, padding=1))
                 self.benc.append(nn.BatchNorm1d(dim[i + 1]))
-                self.dec.append(nn.ConvTranspose1d(dim[i + 1], dim[i], kernel_size=4, stride=2, padding=1,
+                self.dec.append(nn.ConvTranspose1d(dim[i+1], dim[i], kernel_size=4, stride=2, padding=1,
                                                    output_padding=output_padding[i]))
                 self.bdec.append(nn.BatchNorm1d(dim[i]))
             else:
                 self.enc.append(nn.Conv1d(dim[i], dim[i + 1], kernel_size=5, stride=2, padding=2))
-                self.benc.append(nn.BatchNorm1d(dim[i + 1]))
-                self.dec.append(nn.ConvTranspose1d(dim[i + 1], dim[i], kernel_size=5, stride=2, padding=2,
+                self.benc.append(nn.BatchNorm1d(dim[i+1]))
+                self.dec.append(nn.ConvTranspose1d(dim[i+1], dim[i], kernel_size=5, stride=2, padding=2,
                                                    output_padding=output_padding[i]))
                 self.bdec.append(nn.BatchNorm1d(dim[i]))
             setattr(self, 'enc_{}'.format(i), self.enc[-1])
@@ -149,16 +149,16 @@ class conv1dSDAE(nn.Module):
                 if m.bias.data is not None:
                     init.constant(m.bias, 0)
 
-    def forward(self, x, index):
+    def forward(self,x,index):
         inp = x
         encoded = x
-        for i, (encoder, bencoder) in enumerate(zip(self.enc, self.benc)):
-            if i == self.nlayers - 1:
+        for i, (encoder,bencoder) in enumerate(zip(self.enc, self.benc)):
+            if i == self.nlayers-1:
                 encoded = encoded.view(encoded.size(0), -1)
             if i < index:
                 encoded = encoder(encoded)
                 # this is to avoid batch norm during last layer of encoder
-                if i < self.nlayers - 1:
+                if i < self.nlayers-1:
                     encoded = bencoder(encoded)
                     encoded = F.leaky_relu(encoded, negative_slope=self.reluslope)
             if i == index:
@@ -167,16 +167,16 @@ class conv1dSDAE(nn.Module):
                 if index:
                     out = self.dropmodule1(out)
                 out = encoder(out)
-                if i < self.nlayers - 1:
+                if i < self.nlayers-1:
                     out = bencoder(out)
-        if index < self.nlayers - 1:
+        if index < self.nlayers-1:
             out = F.leaky_relu(out, negative_slope=self.reluslope)
             out = self.dropmodule2(out)
         if index >= self.nlayers:
             out = encoded
         for i, (decoder, bdecoder) in reversed(list(enumerate(zip(self.dec, self.bdec)))):
-            if index >= self.nlayers - 1 and i == self.nlayers - 1:
-                out = out.view(out.size(0), -1, 1, 1)
+            if index >= self.nlayers-1 and i == self.nlayers-1:
+                out = out.view(out.size(0),-1,1)
             if index >= self.nlayers:
                 out = decoder(out)
                 if i:
@@ -187,6 +187,7 @@ class conv1dSDAE(nn.Module):
                 if index:
                     out = bdecoder(out)
                     out = F.leaky_relu(out, negative_slope=self.reluslope)
+        out = out.view(inp.shape)
         out = self.loss(out, inp)
         return out
 
