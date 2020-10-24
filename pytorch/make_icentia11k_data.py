@@ -53,9 +53,9 @@ with gzip.open(labels_file, 'rb') as f:
             continue
 		
 		# also can add condition on rtype or btype or any other to manipulate the learning data
-        if int(patient) < train_patients and int(patient) % partition:
+        if int(patient) < train_patients and int(patient) % partition == 0:
             train_labels_subset.append([patient, segment, frame, btype.value, rtype.value])
-        elif int(patient) % partition:
+        elif int(patient) % partition == 0:
             test_labels_subset.append([patient, segment, frame, btype.value, rtype.value])
 
 
